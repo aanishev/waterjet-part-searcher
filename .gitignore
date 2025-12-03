@@ -211,3 +211,6 @@ config.py
 
 # Databases
 data/
+
+# PyCharm
+.idea/
