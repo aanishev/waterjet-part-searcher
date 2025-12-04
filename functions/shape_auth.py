@@ -49,7 +49,7 @@ def shape_login(username: str, password: str) -> requests.Session:
 
     # можно проверять клиентский JSON в ответе
     # но часто достаточно просто куки
-    if "PT_OnlineBusiness_Authentication" not in session.cookies.get_dict():
+    if ".PTOne.Auth" not in session.cookies.get_dict():
         raise RuntimeError("Логин не удался!")
 
     return session
