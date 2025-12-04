@@ -19,7 +19,7 @@ def shape_scrape(keyword: str):
         productinfo = parse_shape_product_page(resp.text)
         full_text = (f'╭  Found products:\n'
                     f'├  <a href="{prod_page}">{productinfo[0]} ({productinfo[1]})</a> - {productinfo[2]}\n'
-                    f'╰  Total count: 1')
+                    f'╰  Total count: 1\n')
         return str(full_text)
     else:
         products = parse_shape_products(resp.text)
