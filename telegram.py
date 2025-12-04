@@ -497,6 +497,32 @@ def cmd_adduser(message):
     conn.commit()
     bot.reply_to(message, f"{t(L.USER, message.from_user.id)} {user_id} ({uname}) {t(L.ADDEDWITHROLE, message.from_user.id)} {role}, lang=en.", reply_markup=adduser_hkb)
 
+@bot.message_handler(commands=['sendall'])
+@admin_only
+def cmd_sendall(message):
+    sendall_hkb = types.InlineKeyboardMarkup()
+    btn_hidemsg = types.InlineKeyboardButton(
+        text=t(L.HIDEBTN, message.from_user.id),
+        callback_data="hidemsg"
+    )
+    sendall_hkb.add(btn_hidemsg)
+    try:
+        _, text_str = message.text.strip().split(maxsplit=1)
+    except ValueError:
+        bot.reply_to(message, f"{t(L.USE, message.from_user.id)}: /sendall (text)", reply_markup=sendall_hkb)
+        return
+
+    rows = conn.execute("SELECT user_id FROM users").fetchall()
+
+    # Если нужно получить список только значений
+    user_ids = [row[0] for row in rows]
+
+    for user_id in user_ids:
+        bot.send_message(user_id, text_str)
+
+    bot.reply_to(message, f"Sent successfully!", reply_markup=sendall_hkb)
+
+
 @bot.message_handler(commands=['checkuser'])
 @admin_only
 def cmd_checkuser(message):
