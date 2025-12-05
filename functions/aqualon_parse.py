@@ -2,6 +2,33 @@ from functions.aqualon_auth import login_aqualon
 from config import AQUALON_PASSWORD, AQUALON_USERNAME
 import requests
 from bs4 import BeautifulSoup
+import re
+import re
+from lxml import html
+import httpx
+
+_PREFIX_RE = re.compile(r"^\s*Gross\s*Price\s*:\s*", re.IGNORECASE)
+
+def fetch_gross_price_bs(url: str, session: requests.Session, *, timeout: float = 10.0) -> str:
+    r = session.get(url, timeout=timeout)
+    r.raise_for_status()
+
+    soup = BeautifulSoup(r.text, "lxml")
+
+    # 1) самый прямой путь: найти span, где есть "Gross Price:"
+    span = soup.find("span", string=re.compile(r"\bGross\s*Price\s*:", re.IGNORECASE))
+    if span:
+        raw = span.get_text(" ", strip=True)
+        return _PREFIX_RE.sub("", raw).strip()
+
+    # 2) запасной: если "Gross Price:" не голой строкой, а внутри спана есть вложенные ноды
+    # (тогда string=... может не сработать)
+    for sp in soup.find_all("span"):
+        raw = sp.get_text(" ", strip=True)
+        if re.search(r"\bGross\s*Price\s*:", raw, flags=re.IGNORECASE):
+            return re.sub(r"\bGross\s*Price\s*:\s*", "", raw, flags=re.IGNORECASE).strip()
+
+    raise ValueError("Gross Price не найден в HTML (возможно, подгружается JavaScript-ом).")
 
 def parse_aqualon_search_results(json_data):
     html = json_data.get("d", "")
@@ -73,7 +100,8 @@ def aqualon_scrape(keywords: str):
     products = parse_aqualon_search_results(aqualon_search(session_log, keywords))
     full_text = f'╭  Found products:\n'
     for href, title, artno, price in products:
-        full_text += f'├  <a href="{href}">{title} ({artno})</a> - {price}\n'
+        gross = fetch_gross_price_bs(href, session_log)
+        full_text += f'├  <a href="{href}">{title} ({artno})</a> - {price} (Gross - {gross})\n'
     full_text += f'╰  Total count: {len(products)}\n'
     return str(full_text)
 
