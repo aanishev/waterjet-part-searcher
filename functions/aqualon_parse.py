@@ -28,7 +28,7 @@ def fetch_gross_price_bs(url: str, session: requests.Session, *, timeout: float 
         if re.search(r"\bGross\s*Price\s*:", raw, flags=re.IGNORECASE):
             return re.sub(r"\bGross\s*Price\s*:\s*", "", raw, flags=re.IGNORECASE).strip()
 
-    raise ValueError("Gross Price не найден в HTML (возможно, подгружается JavaScript-ом).")
+    return "Not found"
 
 def parse_aqualon_search_results(json_data):
     html = json_data.get("d", "")

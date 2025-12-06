@@ -47,7 +47,7 @@ def parse_shape_product_page(html: str):
         full_price = " ".join(price_el.stripped_strings)
         price = full_price.split("/")[0].strip()
     else:
-        price = ""
+        price = "Not found"
 
     # 4. Цена gross
     grprice_el = soup.select_one("p.product-grossprice")
@@ -55,7 +55,7 @@ def parse_shape_product_page(html: str):
         full_grprice = " ".join(grprice_el.stripped_strings)
         grprice = full_grprice.split("/")[0].strip()
     else:
-        grprice = ""
+        grprice = "Not found"
 
 
     # возвращаем в том же формате, что и для списка
@@ -85,13 +85,13 @@ def parse_shape_products(html: str):
             full_price = " ".join(price_el.stripped_strings)
             price = full_price.split("/")[0].strip()
         else:
-            price = ""
+            price = "Not found"
         # 4. Цена gross
         grprice_el = item.select_one("p.product-grossprice")
         if grprice_el:
             full_grprice = " ".join(grprice_el.stripped_strings)
             grprice = full_grprice.split("/")[0].strip()
         else:
-            grprice = ""
+            grprice = "Not found"
         results.append((href, title, stockcode, price, grprice))
     return results
