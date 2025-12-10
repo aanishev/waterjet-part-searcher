@@ -21,14 +21,12 @@ class Product:
     price: str
     url: str
     source_page: str
-    desc: str # откуда нашли (для отладки/прозрачности)
+    desc: str
 
 def parse_keywords(raw: str) -> list[str]:
     return [t for t in re.split(r"[,\s]+", raw.strip()) if t]
 
-# Синхронный API (удобно дергать из обычных скриптов или тестов):
 def find_products(pages: list[str], keywords: list[str]) -> list[Product]:
-    # если цикл уже запущен — поднимите a_find_products снаружи (здесь блокировать нельзя)
     try:
         asyncio.get_running_loop()
     except RuntimeError:
@@ -40,9 +38,6 @@ def find_products(pages: list[str], keywords: list[str]) -> list[Product]:
         )
 
 def load_pages(file_path: Path) -> List[str]:
-    """
-    Загружает список URL из файла. Поддерживает комментарии (# ...) и пустые строки.
-    """
     if not file_path.exists():
         raise FileNotFoundError(
             f'Не найден файл "{file_path}". Создайте его в корне проекта и укажите по одному URL на строку.'
@@ -59,9 +54,6 @@ def load_pages(file_path: Path) -> List[str]:
 
 
 async def fetch(client: httpx.AsyncClient, url: str, *, attempts: int = 3, timeout_s: float = 20.0) -> Optional[str]:
-    """
-    Получает HTML с простейшим механизмом повторов.
-    """
     last_err: Optional[Exception] = None
     for attempt in range(1, attempts + 1):
         try:
@@ -76,9 +68,7 @@ async def fetch(client: httpx.AsyncClient, url: str, *, attempts: int = 3, timeo
             return resp.text
         except Exception as e:  # noqa: BLE001
             last_err = e
-            # Небольшая экспоненциальная задержка между попытками
             await asyncio.sleep(min(2 ** attempt, 5))
-    # Хотим видеть ошибку в консоли, но не ронять выполнение
     print(f"[warn] Не удалось загрузить {url}: {last_err}")
     return None
 
@@ -94,7 +84,6 @@ def extract_products(html: str, base_url: str, keywords: list[str]) -> List[Prod
     desc = ""
     desc_cf = ""
 
-    # Основная структура
     for ul in soup.select("ul.woo-entry-inner.clr"):
         for woo_desc in ul.select("li.woo-desc"):
             desc = _text(woo_desc)
@@ -111,7 +100,6 @@ def extract_products(html: str, base_url: str, keywords: list[str]) -> List[Prod
             if not (title_hit or desc_hit):
                 continue
 
-            # Ищем соседний <li class="price-wrap"> после title
             price_li = None
             for sib in li_title.find_next_siblings():
                 if isinstance(sib, Tag) and sib.name == "li" and "price-wrap" in (sib.get("class") or []):
@@ -123,22 +111,18 @@ def extract_products(html: str, base_url: str, keywords: list[str]) -> List[Prod
                 if bdi:
                     price_text = _text(bdi)
                 else:
-                    # запасной путь: любая цена внутри price-wrap
                     price_text = _text(price_li.select_one(".price, ins, del, span, strong"))
             else:
-                # fallback для иных тем WooCommerce (бывает <span class="price"> и т.п.)
                 near_price = li_title.find_next(["bdi", "span"], class_=lambda c: c and "price" in " ".join(c)) \
                              or li_title.find_next("bdi")
                 price_text = _text(near_price)
 
-            # Нормализуем цену: убираем лишние пробелы
             price_text = re.sub(r"\s+", " ", price_text).strip() or "—"
 
             href = a.get("href") or ""
             full_url = urljoin(base_url, href)
             results.append(Product(title=title, price=price_text, url=full_url, source_page=base_url, desc = desc))
 
-    # Доп. защита от дублей (на случай повторов в разметке)
     unique: dict[Tuple[str, str], Product] = {}
     for p in results:
         key = (p.title, p.url)

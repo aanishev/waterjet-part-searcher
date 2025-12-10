@@ -3,20 +3,17 @@ import requests
 def login_strato(username: str, password: str) -> requests.Session:
     session = requests.Session()
 
-    # Нормальный браузерный UA
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) "
                       "Chrome/142.0.0.0 Safari/537.36"
     })
 
-    # URL логина (точно как в Network)
     url = "https://shop.strato.de/epages/63239732.sf/en_GB/"
     params = {
         "ObjectPath": "/Shops/63239732/Categories"
     }
 
-    # Form Data — полностью как в DevTools
     payload = {
         "ChangeAction": "SaveLoginForm",
         "RegistrationObjectID": "16526533",

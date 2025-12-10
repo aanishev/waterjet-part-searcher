@@ -57,22 +57,16 @@ def parse_shape_product_page(html: str):
     else:
         grprice = "Not found"
 
-
-    # возвращаем в том же формате, что и для списка
     return title, stockcode, price, grprice
 
 def parse_shape_products(html: str):
     soup = BeautifulSoup(html, "html.parser")
     results = []
     for item in soup.select("li.product.type-erp"):
-        # 1. Ссылка + заголовок
-        # сначала ищем именно заголовок
         title_link = item.select_one("h3.hover-product-title a.js-product-detail")
         if not title_link:
-            # fallback: вдруг верстка отличается
             title_link = item.select_one("h3 a, a.js-product-detail")
         if not title_link:
-            # если вообще не нашли ссылку с названием — пропускаем товар
             continue
         href = (title_link.get("href") or "").strip()
         title = title_link.get_text(strip=True)

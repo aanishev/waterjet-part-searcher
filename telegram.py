@@ -12,6 +12,7 @@ from functions.accutek_parse import load_pages, find_products, parse_keywords, r
 from functions.shape_parse import shape_scrape
 from functions.gtmaco_parse import gtmaco_scrape
 from functions.aqualon_parse import aqualon_scrape
+from functions.allfi_parse import allfi_scrape
 from functions.i18n import t, set_lang
 from locales.keys import L
 
@@ -214,6 +215,50 @@ def search_products(message, msg):
     else:
         open_menu(message, message.from_user)
 
+# === Кнопка "Парсинг ALLFI" ===
+@bot.callback_query_handler(func=lambda call: call.data == "parse_allfi")
+def ask_keywords(call):
+    bot.answer_callback_query(call.id)
+    allfi_hkb = types.InlineKeyboardMarkup()
+    btn_hidemsg = types.InlineKeyboardButton(
+        text=t(L.HIDEBTN, call.from_user.id),
+        callback_data="hidemsg"
+    )
+    allfi_hkb.add(btn_hidemsg)
+    msg = bot.send_message(call.message.chat.id, t(L.KWDINPUT, call.from_user.id), reply_markup=allfi_hkb)
+    bot.register_next_step_handler(msg, lambda m: search_products_allf(m, msg))
+
+
+def search_products_allf(message, msg):
+    if message.text.strip() != "/start":
+        kwm_allfi = message.text.strip()
+        bot.delete_message(msg.chat.id, msg.message_id)
+        bot.delete_message(message.chat.id, message.id)
+        pendingmsg = bot.send_message(message.chat.id, t(L.SEARCHING, message.from_user.id))
+        allfi_pkb = types.InlineKeyboardMarkup()
+        btn_hidemsg = types.InlineKeyboardButton(
+            text=t(L.HIDEBTN, message.from_user.id),
+            callback_data="hidemsg"
+        )
+        allfi_pkb.add(btn_hidemsg)
+        full_text = allfi_scrape(kwm_allfi)
+        found_prod = t(L.FOUNDPROD, message.from_user.id)
+        total_t = t(L.TOTALT, message.from_user.id)
+        final_full_text = full_text.replace("Found products", found_prod).replace("Total count", total_t)
+        if len(final_full_text) < 4096:
+            bot.send_message(
+                msg.chat.id,
+                final_full_text,
+                parse_mode="HTML",
+                disable_web_page_preview=True,
+                reply_markup=allfi_pkb,
+            )
+        else:
+            send_long_html(bot, msg.chat.id, final_full_text, reply_markup=allfi_pkb)
+        bot.delete_message(pendingmsg.chat.id, pendingmsg.message_id)
+    else:
+        open_menu(message, message.from_user)
+
 # === Кнопка "Парсинг GTMACO" ===
 @bot.callback_query_handler(func=lambda call: call.data == "parse_gtmaco")
 def ask_keywords(call):
@@ -337,7 +382,8 @@ def search_products_glb(message, msg):
         full_text_shape = shape_scrape(kwm_glb).replace("Found products", found_prod + " (Shape)").replace("Total count", total_t + " (Shape)") + "\n"
         full_text_gtm = gtmaco_scrape(kwm_glb).replace("Found products", found_prod + " (GTMACO)").replace("Total count", total_t + " (GTMACO)") + "\n"
         full_text_aql = aqualon_scrape(kwm_glb).replace("Found products", found_prod + " (Aqualon)").replace("Total count", total_t + " (Aqualon)") + "\n"
-        final_full_text = full_text_acc + full_text_shape + full_text_gtm + full_text_aql
+        full_text_allf = allfi_scrape(kwm_glb).replace("Found products", found_prod + " (Allfi)").replace("Total count", total_t + " (Allfi)") + "\n"
+        final_full_text = full_text_acc + full_text_shape + full_text_gtm + full_text_aql + full_text_allf
         if len(final_full_text) < 4096:
             bot.send_message(
                 msg.chat.id,

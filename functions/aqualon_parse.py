@@ -15,14 +15,11 @@ def fetch_gross_price_bs(url: str, session: requests.Session, *, timeout: float 
 
     soup = BeautifulSoup(r.text, "lxml")
 
-    # 1) самый прямой путь: найти span, где есть "Gross Price:"
     span = soup.find("span", string=re.compile(r"\bGross\s*Price\s*:", re.IGNORECASE))
     if span:
         raw = span.get_text(" ", strip=True)
         return _PREFIX_RE.sub("", raw).strip()
 
-    # 2) запасной: если "Gross Price:" не голой строкой, а внутри спана есть вложенные ноды
-    # (тогда string=... может не сработать)
     for sp in soup.find_all("span"):
         raw = sp.get_text(" ", strip=True)
         if re.search(r"\bGross\s*Price\s*:", raw, flags=re.IGNORECASE):
@@ -36,35 +33,27 @@ def parse_aqualon_search_results(json_data):
 
     results = []
 
-    # Каждый блок товаров — <ul class="overlay-search-result">
     for ul in soup.select("ul.overlay-search-result"):
         for li in ul.select("li"):
 
-            # --- href ---
             link = li.select_one("a")
             if not link:
                 continue
             href_raw = link.get("href", "").strip()
             href = "https://www.aqualonwaterjet.se" + href_raw
 
-            # --- title ---
             title_el = link.select_one("p.title")
             title = title_el.get_text(strip=True) if title_el else ""
 
-            # --- artno (артикул) ---
             sku_el = link.select_one(".sku")
             if sku_el:
-                # "ArtNr: 10196" -> "10196"
                 sku_text = sku_el.get_text(" ", strip=True)
-                # убираем "ArtNr:" (разные языки — но везде слово начинается с Art)
                 artno = sku_text.replace("ArtNr:", "").replace("ArtNr :", "").strip()
             else:
                 artno = ""
 
-            # --- price ---
             price_el = link.select_one(".price")
             if price_el:
-                # "Price: 44.72 €" -> "44.72 €"
                 price_text = price_el.get_text(" ", strip=True)
                 if ":" in price_text:
                     price = price_text.split(":", 1)[1].strip()
@@ -83,7 +72,7 @@ def aqualon_search(session: requests.Session, search_term: str):
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "X-Requested-With": "XMLHttpRequest",
         "Origin": "https://www.aqualonwaterjet.se",
-        "Referer": "https://www.aqualonwaterjet.se/en/products",   # важный
+        "Referer": "https://www.aqualonwaterjet.se/en/products",
     }
 
     payload = {

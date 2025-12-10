@@ -52,6 +52,10 @@ def open_menu(message, user):
         text="🔎 GTMACO",
         callback_data="parse_gtmaco"
     )
+    btn_allfi = types.InlineKeyboardButton(
+        text="🔎 Allfi",
+        callback_data="parse_allfi"
+    )
     btn_admincmd = types.InlineKeyboardButton(
         text=">_ Admin",
         callback_data="admincmdtext"
@@ -92,7 +96,7 @@ def open_menu(message, user):
     if urole == 'Manager' or urole == 'Administrator':
         menu_mkb.row(btn_accutek, btn_shape)
         menu_mkb.row(btn_aqualon, btn_gtmaco)
-        menu_mkb.add(btn_glb)
+        menu_mkb.row(btn_allfi, btn_glb)
         if urole == 'Administrator':
             menu_mkb.add(btn_admincmd)
         menu_mkb.add(btn_chlang)
