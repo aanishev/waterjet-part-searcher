@@ -5,13 +5,22 @@ from config import ALLFI_USERNAME, ALLFI_PASSWORD
 
 def get_allfi_html(kwm: str):
     session = allfi_login(ALLFI_USERNAME, ALLFI_PASSWORD)
-    searchurl = f"https://allfiwaterjetparts.com/en/products,2?search={kwm}"
+    searchurl = f"https://allfiwaterjetparts.com/en/products,2?search={kwm}&seaOpts=10&seaAdv=1"
     resp = session.get(searchurl)
     resp.raise_for_status()
     return resp.text
 
 def allfi_parser(html: str, kwm: str):
     soup = BeautifulSoup(html, "html.parser")
+
+    recently_viewed = soup.find(
+        "h2",
+        class_="section-title",
+        string=lambda s: s and "Recently viewed" in s
+    )
+
+    if recently_viewed:
+        return []
 
     results = []
 
