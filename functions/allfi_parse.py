@@ -10,7 +10,7 @@ def get_allfi_html(kwm: str):
     resp.raise_for_status()
     return resp.text
 
-def allfi_parser(html: str):
+def allfi_parser(html: str, kwm: str):
     soup = BeautifulSoup(html, "html.parser")
 
     results = []
@@ -37,7 +37,7 @@ def allfi_parser(html: str):
     return results
 
 def allfi_scrape(kwm: str):
-    products = allfi_parser(get_allfi_html(kwm))
+    products = allfi_parser(get_allfi_html(kwm), kwm)
     full_text = f'╭  Found products:\n'
     for href, title, stock, price in products:
         full_text += f'├  <a href="{href}">{title} ({stock})</a> - {price}\n'
