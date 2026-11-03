@@ -1,10 +1,11 @@
-# Telegram Partner Management Bot
+# Waterjet Parts Searching Bot
 
-A Telegram bot built with pyTelegramBotAPI designed to streamline partner management operations for company managers.
+A Telegram bot built with pyTelegramBotAPI designed to easily search for Waterjet parts on Accutek, Aqualon, GTMACO, Shape, Allfi.
 
 ## 📋 Overview
 
-This bot serves as a centralized platform for company managers to efficiently manage and communicate with business partners through Telegram. It automates routine tasks, provides quick access to partner information, and facilitates seamless collaboration.
+I think, you can't use this bot without improvements from your side, but it is good point to start if you need this kind of tool.
+Good luck!
 
 ## 📦 Dependencies
 
