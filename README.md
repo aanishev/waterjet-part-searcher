@@ -1,6 +1,7 @@
 # Waterjet Parts Searching Bot
 
 ⚠️ **Deprecated.**
+
 A Telegram bot built with pyTelegramBotAPI designed to easily search for Waterjet parts on Accutek, Aqualon, GTMACO, Shape, Allfi.
 
 ## 📋 Overview
